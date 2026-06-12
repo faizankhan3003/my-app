@@ -37,14 +37,15 @@ jobs:
             -t ${{ env.IMAGE_NAME }}:latest `
             .
 
-      - name: Trivy security scan
+- name: Trivy security scan
         run: |
-          trivy image `
+          $trivyPath = "C:\Users\lenovo\AppData\Local\Microsoft\WinGet\Packages\AquaSecurity.Trivy_Microsoft.Winget.Source_8wekyb3d8bbwe\trivy.exe"
+          & $trivyPath image `
             --severity CRITICAL,HIGH `
             --exit-code 1 `
             --ignore-unfixed `
             --format table `
-            ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
+            "${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}"
 
       - name: Push to Docker Hub
         run: |
