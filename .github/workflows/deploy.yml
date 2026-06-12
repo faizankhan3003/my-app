@@ -12,9 +12,6 @@ env:
 
 jobs:
 
-  # ─────────────────────────────────────────────────────────────
-  # JOB 1 — Build, Scan, Push
-  # ─────────────────────────────────────────────────────────────
   build-scan-push:
     name: Build → Scan → Push
     runs-on: self-hosted
@@ -32,32 +29,20 @@ jobs:
 
       - name: Build Docker image
         run: |
-          docker build `
-            -t ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }} `
-            -t ${{ env.IMAGE_NAME }}:latest `
-            .
+          docker build -t "${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}" -t "${{ env.IMAGE_NAME }}:latest" .
 
-- name: Trivy security scan
+      - name: Trivy security scan
         run: |
           $trivyPath = "C:\Users\lenovo\AppData\Local\Microsoft\WinGet\Packages\AquaSecurity.Trivy_Microsoft.Winget.Source_8wekyb3d8bbwe\trivy.exe"
-          & $trivyPath image `
-            --severity CRITICAL,HIGH `
-            --exit-code 1 `
-            --ignore-unfixed `
-            --format table `
-            "${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}"
+          & $trivyPath image --severity CRITICAL,HIGH --exit-code 1 --ignore-unfixed --format table "${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}"
 
       - name: Push to Docker Hub
         run: |
-          echo "${{ secrets.DOCKERHUB_TOKEN }}" | `
-            docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
-          docker push ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
-          docker push ${{ env.IMAGE_NAME }}:latest
+          echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
+          docker push "${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}"
+          docker push "${{ env.IMAGE_NAME }}:latest"
           docker logout
 
-  # ─────────────────────────────────────────────────────────────
-  # JOB 2 — Deploy to Minikube
-  # ─────────────────────────────────────────────────────────────
   deploy:
     name: Deploy to Minikube
     runs-on: self-hosted
@@ -79,15 +64,11 @@ jobs:
 
       - name: Update image
         run: |
-          kubectl set image deployment/my-app `
-            my-app=${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }} `
-            --namespace=default
+          kubectl set image deployment/my-app my-app="${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}" --namespace=default
 
       - name: Wait for rollout
         run: |
-          kubectl rollout status deployment/my-app `
-            --namespace=default `
-            --timeout=120s
+          kubectl rollout status deployment/my-app --namespace=default --timeout=120s
 
       - name: Show running pods
         run: |
